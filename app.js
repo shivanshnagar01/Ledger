@@ -1021,7 +1021,7 @@ async function GetTransactionsByCategory() {
 
 async function testGrok(prompt) {
 
-    const response = await fetch("/apikey/insight", {
+    const response = await fetch("/api/insight", {
         method: "POST",
 
         headers: {
