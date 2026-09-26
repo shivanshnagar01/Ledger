@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ledger — dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+
+  <style>
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    :root {
+      --ink: #10151d;
+      --ink-soft: #171d27;
+      --paper: #ece6d8;
+      --paper-line: #c9bfa8;
+      --brass: #b8863b;
+      --brass-bright: #d6a857;
+      --text-onink: #f3eee1;
+      --text-onink-muted: #a9a296;
+      --text-onpaper: #1d2430;
+      --text-onpaper-muted: #5c5747;
+      --sage: #5c8069;
+      --rust: #a85142;
+      --max-w: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--ink);
+      color: var(--text-onink);
+      font-family: 'Public Sans', sans-serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .transac-card {
+      border-radius: 6px;
+      background-color: var(--paper-line);
+      padding: 10px 20px;
+      color: rgb(67, 67, 67);
+      display: flex;
+    }
+
+    /* .transac-card{
+  border-radius: 6px;
+  background-color: white;
+  border: 2px solid red;
+  padding: 10px 20px;
+  color: rgb(67, 67, 67);
+  display: flex;
+} */
+
+    .tran {
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      /* height: 70px; */
+    }
+
+    .tran-left {
+      flex-direction: row;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .tran-right {
+      /* flex-direction: row; */
+      align-items: center;
+      gap: 20px;
+    }
+
+    .transac-amount {
+      font-size: 30px;
+      font-weight: 600;
+    }
+
+    .transac-type {
+      /* font-size: 30px; */
+      font-weight: 600;
+      font-size: 20px;
+    }
+
+    .num {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: 'Fraunces', serif;
+      font-weight: 500;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--brass-bright);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    .wrap {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ---------- header ---------- */
+    header {
+      padding: 26px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      font-family: 'Fraunces', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .brand span {
+      color: var(--brass-bright);
+    }
+
+    .user-email {
+      font-size: 0.85rem;
+      color: var(--text-onink-muted);
+    }
+
+    .signout {
+      font-size: 0.85rem;
+      text-decoration: none;
+      color: var(--text-onink-muted);
+      border-bottom: 1px solid transparent;
+      background: none;
+      border-width: 0 0 1px 0;
+      border-style: solid;
+      border-color: transparent;
+      cursor: pointer;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .signout:hover {
+      color: var(--text-onink);
+      border-color: var(--text-onink-muted);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    /* ---------- summary row ---------- */
+    .summary {
+      padding: 40px 0 8px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .summary-card {
+      background: var(--ink-soft);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 4px;
+      padding: 20px 22px;
+    }
+
+    .summary-label {
+      font-size: 0.85rem;
+      color: var(--text-onink-muted);
+    }
+
+    .summary-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.7rem;
+      margin-top: 8px;
+      transition: 0.3s;
+    }
+
+    .summary-value.over {
+      color: var(--rust);
+    }
+
+    .summary-value.under {
+      color: var(--sage);
+    }
+
+    /* ---------- main grid: add-transaction + list ---------- */
+    main {
+      padding: 44px 0 60px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    /* --- add transaction form --- */
+    .panel {
+      background: var(--ink-soft);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 4px;
+      padding: 24px;
+      /* margin-top: 20px; */
+    }
+
+    .panel h2 {
+      font-size: 1.15rem;
+      margin-bottom: 18px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--text-onink-muted);
+      margin-bottom: 6px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      background: var(--ink);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-onink);
+      padding: 10px 12px;
+      border-radius: 3px;
+      font-family: 'Public Sans', sans-serif;
+      font-size: 0.95rem;
+    }
+
+    .field input.num-input {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--brass);
+      color: var(--ink);
+      font-weight: 600;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 3px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      background: var(--brass-bright);
+    }
+
+    .form-status {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: var(--text-onink-muted);
+      min-height: 1.2em;
+    }
+
+    .form-status.error {
+      color: var(--rust);
+    }
+
+    .form-status.success {
+      color: var(--sage);
+    }
+
+    /* --- category breakdown --- */
+    .breakdown {
+      margin-top: 24px;
+    }
+
+    .breakdown h2 {
+      font-size: 1.15rem;
+      margin-bottom: 16px;
+    }
+
+    #category-breakdown {
+      display: flex;
+      flex-direction: column;
+      /* gap: 14px; */
+    }
+
+    .cat-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .cat-name {
+      flex: 0 0 100px;
+      font-size: 0.88rem;
+    }
+
+    .cat-bar-track {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .cat-bar-fill {
+      height: 100%;
+      background: var(--brass);
+      border-radius: 3px;
+    }
+
+    .cat-amt {
+      flex: 0 0 auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-onink-muted);
+      min-width: 66px;
+      text-align: right;
+    }
+
+    .empty-state {
+      font-size: 0.88rem;
+      color: var(--text-onink-muted);
+    }
+
+    /* --- transaction list --- */
+    .list-panel {
+      background: var(--paper);
+      color: var(--text-onpaper);
+      border-radius: 4px;
+      padding: 26px 16px 10px;
+      margin-left: -10px;
+      overflow: hidden;
+      height: 770px;
+    }
+
+    .list-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .list-head h2 {
+      color: var(--text-onpaper);
+      font-size: 1.2rem;
+    }
+
+    .list-filter {
+      font-family: 'Public Sans', sans-serif;
+      font-size: 0.85rem;
+      background: transparent;
+      border: 1px solid var(--paper-line);
+      color: var(--text-onpaper);
+      padding: 7px 10px;
+      border-radius: 3px;
+    }
+
+    #transaction-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      transition: 0.3s ease;
+    }
+
+    .txn-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-top: 1px solid var(--paper-line);
+    }
+
+    .txn-cat {
+      flex: 0 0 120px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .txn-note {
+      flex: 1;
+      font-size: 0.9rem;
+      color: var(--text-onpaper-muted);
+    }
+
+    .txn-date {
+      flex: 0 0 90px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-onpaper-muted);
+    }
+
+    .txn-amt {
+      flex: 0 0 auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.92rem;
+      min-width: 78px;
+      text-align: right;
+    }
+
+    .txn-delete {
+      flex: 0 0 auto;
+      background: none;
+      border: none;
+      color: var(--text-onpaper-muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: inherit;
+      padding: 4px 6px;
+    }
+
+    .txn-delete:hover {
+      color: var(--rust);
+    }
+
+    .list-empty {
+      padding: 30px 0;
+      font-size: 0.92rem;
+      color: var(--text-onpaper-muted);
+      text-align: center;
+    }
+
+    /* ---------- AI insight ---------- */
+    .insight-section {
+      padding: 0 0 60px;
+    }
+
+    .insight-card {
+      background: var(--ink-soft);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-left: 3px solid var(--brass);
+      border-radius: 3px;
+      padding: 26px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      margin-top: 20px;
+      justify-items: center;
+      flex-wrap: wrap;
+    }
+
+    .insight-label {
+      font-size: 0.85rem;
+      color: var(--text-onink-muted);
+    }
+
+    #insight-text {
+      font-size: 1.02rem;
+      max-width: 60ch;
+    }
+
+    .insight-refresh {
+      font-size: 0.85rem;
+      background: none;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-onink-muted);
+      padding: 9px 16px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .insight-refresh:hover {
+      color: var(--text-onink);
+      border-color: var(--text-onink-muted);
+    }
+
+    .notification {
+      position: fixed;
+      font-size: 16px;
+      left: 10px;
+      font-family: 'JetBrains Mono';
+      bottom: -10px;
+      padding: 10px 20px;
+      /* border: 2px solid rgb(147, 61, 61); */
+      border: 2px solid var(--brass);
+      box-shadow: 0px 0px 40px var(--ink);
+      background-color: var(--ink-soft);
+      border-radius: 5px;
+      color: white;
+      opacity: 0;
+      scale: 0.8;
+      transition: 0.3s;
+    }
+
+    .notification.activatedNotification {
+      transition: 0.3s;
+      bottom: 10px;
+      opacity: 1;
+      scale: 1;
+
+    }
+
+    #transaction-list {
+      height: 92%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: scroll;
+    }
+
+    #weeklyChart {
+      width: 100%;
+      height: 350px;
+      background: #1f2c41;
+      border-radius: 8px;
+    }
+
+    #chart-tooltip {
+      /* display: none; */
+      position: absolute;
+      font-size: 14px;
+      background-color: #171d27;
+      /* box-shadow: 0px 0px 10px rgba(122, 122, 122, 0.438); */
+      color: white;
+      border-radius: 5px;
+      border: 2px solid rgba(255, 255, 255);
+      padding: 10px;
+      z-index: 10;
+      opacity: 0;
+    }
+
+    .insight-card {
+      position: relative;
+    }
+
+    .expenselimitelem {
+      width: 100%;
+      background: var(--ink);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-onink);
+      padding: 10px 12px;
+      border-radius: 3px;
+      font-family: 'Public Sans', sans-serif;
+      font-size: 0.95rem;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .up {
+      margin-top: 20px;
+    }
+
+    .wrap {
+      margin-top: 10px;
+    }
+
+    #AItext {
+      margin-bottom: 10px;
+      font-size: 16px;
+      width: 80%;
+      justify-self: center;
+      /* text-align: right; */
+    }
+
+
+    #csv-selector {
+      margin-left: 90px;
+      font-size: 16px;
+      color: white;
+      background-color: var(--brass);
+      box-shadow: none;
+      border: none;
+      outline: none;
+      height: fit-content;
+      border-radius: 5px;
+      opacity: 0.8;
+      position: relative;
+      transition: 0.2s;
+    }
+
+    #csv-selector::after {
+      content: "Import a .csv for this month";
+      background-color: black;
+      color: white;
+      padding: 5px;
+      border-radius: 5px;
+      position: absolute;
+      width: max-content;
+      justify-self: center;
+      font-size: 14px;
+      bottom: 30px;
+      left: -65px;
+      opacity: 0;
+      display: inline;
+    }
+
+    #csv-selector:hover {
+      transition-delay: 2s;
+      transition: 0.2s;
+      opacity: 1;
+      cursor: pointer;
+
+    }
+
+    #csv-selector:hover:after {
+      transition: 0.2s;
+      display: inline;
+      opacity: 0.7;
+    }
+
+    @media (max-width: 860px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="notification">Please Fill All The Fields.</div>
+
+  <header>
+    <div class="wrap header-row">
+      <div class="brand">Ledger<span>.</span></div>
+      <div class="header-right">
+        <!-- JS HOOK: set this span's text to the logged-in user's email after auth check -->
+        <span class="user-email" id="user-email">you@example.com</span>
+        <!-- JS HOOK: onclick -> supabase.auth.signOut(), then redirect to auth.html -->
+        <button class="signout" id="signout-btn">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="summary flexsumm">
+    <div class="wrap summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">This month, Net balance</div>
+        <!-- JS HOOK: fill from sum of this month's transactions -->
+        <div class="summary-value num" id="summary-total">₹0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Transactions logged</div>
+        <!-- JS HOOK: fill from count of this month's transactions -->
+        <div class="summary-value num" id="summary-count">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">vs. last month</div>
+        <!-- JS HOOK: compute % change, toggle class "over" (rust) or "under" (sage) -->
+        <div class="summary-value num" id="summary-change">—</div>
+      </div>
+    </div>
+  </section>
+  <main class="wrap">
+    <div>
+      <div class="panel">
+        <!-- <div class="transhead"> -->
+        <h2>Add a transaction<button id="csv-selector">.csv</button></h2>
+        <input type="file" id="csvInput" accept=".csv" hidden>
+        <!-- </div> -->
+        <!-- JS HOOK: on submit, read fields, insert row into Supabase `transactions` table -->
+        <form id="txn-form">
+          <div class="field">
+            <label for="txn-category">Category</label>
+            <select id="category" required>
+              <option value="" disabled selected>Choose one</option>
+              <option value="Food">Food</option>
+              <option value="Travel">Travel</option>
+              <option value="Housing">Housing</option>
+              <option value="Fitness">Fitness</option>
+              <option value="Misc.">Miscellaneous</option>
+              <option value="Other">Other</option>
+            </select>
+            <!-- <input id="customCategory" type="text" placeholder="Enter category" style="display: none;"> -->
+          </div>
+          <div class="field">
+            <label for="type">Type</label>
+            <select name="txn-type" id="type" required>
+              <option value="" disabled selected>Choose one</option>
+              <option value="Expense">Expense</option>
+              <option value="Income">Income</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="amount">Amount (₹)</label>
+            <input type="number" id="amount" class="num-input" min="0" step="1" required />
+          </div>
+          <div class="field">
+            <label for="note">Note (optional)</label>
+            <input type="text" id="note" maxlength="80" placeholder="e.g. Swiggy, Friday night" />
+          </div>
+          <button type="button" class="btn-primary" id="addTransaction">Add Transaction</button>
+          <!-- JS HOOK: show "Saving…" / "Added" / error text here -->
+          <div class="form-status" id="form-status"></div>
+        </form>
+      </div>
+
+      <div class="panel breakdown">
+        <h2>Daily Expenditure limit</h2>
+        <!-- JS HOOK: for each category, render a .cat-row with name, bar width %, and total amount.
+        Show .empty-state text if there are no transactions yet. -->
+        <div id="category-breakdown">
+          <p class="empty-state">Set a daily expenditure limit to analyse expenses better way.</p>
+          <input type="number" class="expenselimitelem" id="expense-limit" placeholder="e.g. 2000, 1500" />
+          <button type="button" class="up btn-primary">Set Limit</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flexpanel">
+
+      <!-- <div id="AItext">Your income jumped $10k, expenses rose by $3.2k—net profit up $6.8k;</div> -->
+      <div id="AItext"></div>
+
+      <div class="list-panel">
+        <div class="list-head">
+          <h2>Transactions</h2>
+          <!-- JS HOOK: onchange -> refilter #transaction-list by selected category -->
+          <span>
+
+            <select class="list-filter" id="MonthSelector">
+              <option value="none" disabled selected>Choose Month</option>
+              <option value="0">January</option>
+              <option value="1">February</option>
+              <option value="2">March</option>
+              <option value="3">April</option>
+              <option value="4">May</option>
+              <option value="5">June</option>
+              <option value="6">July</option>
+              <option value="7">August</option>
+              <option value="8">September</option>
+              <option value="9">October</option>
+              <option value="10">November</option>
+              <option value="11">December</option>
+            </select>
+            <select class="list-filter" id="list-filter">
+              <option value="all">All categories</option>
+              <option value="Food">Food</option>
+              <option value="Travel">Travel</option>
+              <option value="Housing">Housing</option>
+              <option value="Fitness">Fitness</option>
+              <option value="Misc.">Miscellaneous</option>
+              <option value="Other">Other</option>
+            </select>
+          </span>
+        </div>
+
+        <!-- JS HOOK: render one <li class="txn-row"> per transaction, newest first.
+          Each row needs: category, note, date, amount, and a delete button
+          whose onclick removes that row from Supabase + the DOM.
+          Show .list-empty text when there are zero transactions. -->
+        <ul id="transaction-list">
+          <li class="list-empty">No transactions yet. Add your first one on the left.</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <section class="insight-section">
+    <div class="wrap">
+      <div class="insight-card">
+        <div>
+          <div class="insight-label">This month's insight</div>
+          <!-- JS HOOK: fill with response text from your serverless function once it's built.
+               Until then, leave the placeholder copy below. -->
+          <p id="insight-text">Add a few transactions and check back — Ledger needs at least a week of data to say
+            something useful.</p>
+          <div id="chart-tooltip">
+            <div id="tooltip-date"></div>
+            <div id="tooltip-group">
+              <span id="tooltip-type"></span>
+              <span id="tooltip-amount"></span>
+            </div>
+          </div>
+          <canvas id="weeklyChart" width="1000" height="350"></canvas>
+        </div>
+      </div>
+      <button class="insight-refresh" id="insight-refresh">Refresh insight</button>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ledger — know where every rupee went</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    @view-transition {
+      navigation: auto;
+    }
+
+    ::-webkit-scrollbar{
+      display: none;
+    }
+
+    :root {
+      --ink: #10151d;
+      --ink-soft: #171d27;
+      --paper: #ece6d8;
+      --paper-line: #c9bfa8;
+      --brass: #b8863b;
+      --brass-bright: #d6a857;
+      --text-onink: #f3eee1;
+      --text-onink-muted: #a9a296;
+      --text-onpaper: #1d2430;
+      --text-onpaper-muted: #5c5747;
+      --sage: #5c8069;
+      --rust: #a85142;
+      --max-w: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--ink);
+      color: var(--text-onink);
+      font-family: 'Public Sans', sans-serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .num {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: 'Fraunces', serif;
+      font-weight: 500;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    a:focus-visible,
+    button:focus-visible {
+      outline: 2px solid var(--brass-bright);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+
+    .wrap {
+      max-width: var(--max-w);
+      /* margin: 0 auto; */
+      margin-left: 10%;
+      padding: 0 24px;
+    }
+
+    .wr1{
+      display: flex;
+      margin-left: 20%;
+      width: 800px;
+    }
+
+    /* ---------- header ---------- */
+    header {
+      padding: 28px 0;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      font-family: 'Fraunces', serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .brand span {
+      color: var(--brass-bright);
+    }
+
+    .header-cta {
+      font-family: 'Public Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--text-onink);
+      border-bottom: 1px solid var(--brass);
+      padding-bottom: 2px;
+    }
+
+    .header-cta:hover {
+      color: var(--brass-bright);
+      border-color: var(--brass-bright);
+    }
+
+    /* ---------- hero ---------- */
+    .hero {
+      padding: 56px 0 88px;
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 56px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 4.6vw, 3.9rem);
+      line-height: 1.08;
+    }
+
+    .hero p.lede {
+      margin: 22px 0 0;
+      max-width: 46ch;
+      font-size: 1.08rem;
+      color: var(--text-onink-muted);
+    }
+
+    .hero-ctas {
+      margin-top: 34px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: var(--brass);
+      color: var(--ink);
+      font-weight: 600;
+      text-decoration: none;
+      padding: 13px 26px;
+      border-radius: 3px;
+      font-size: 0.98rem;
+      transition: background 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      background: var(--brass-bright);
+    }
+
+    .btn-secondary {
+      color: var(--text-onink-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      border-bottom: 1px solid transparent;
+    }
+
+    .btn-secondary:hover {
+      color: var(--text-onink);
+      border-color: var(--text-onink-muted);
+    }
+
+    /* ---------- ledger mockup card ---------- */
+    .ledger-card {
+      background: var(--paper);
+      color: var(--text-onpaper);
+      border-radius: 4px;
+      padding: 28px 26px 22px;
+      box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.55);
+      transform: rotate(0.4deg);
+    }
+
+    .ledger-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid var(--paper-line);
+      padding-bottom: 14px;
+      margin-bottom: 6px;
+    }
+
+    .ledger-month {
+      font-size: 0.85rem;
+      text-transform: none;
+      color: var(--text-onpaper-muted);
+      font-weight: 500;
+    }
+
+    .ledger-total {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.55rem;
+      font-weight: 500;
+    }
+
+    .ledger-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--paper-line);
+      opacity: 0;
+      animation: rowIn 0.5s ease forwards;
+    }
+
+    .ledger-row:last-of-type {
+      border-bottom: none;
+    }
+
+    .ledger-row:nth-of-type(1) {
+      animation-delay: 0.15s;
+    }
+
+    .ledger-row:nth-of-type(2) {
+      animation-delay: 0.30s;
+    }
+
+    .ledger-row:nth-of-type(3) {
+      animation-delay: 0.45s;
+    }
+
+    .ledger-row:nth-of-type(4) {
+      animation-delay: 0.60s;
+    }
+
+    .ledger-cat {
+      flex: 0 0 108px;
+      font-size: 0.92rem;
+      font-weight: 500;
+    }
+
+    .ledger-bar-track {
+      flex: 1;
+      height: 6px;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .ledger-bar-fill {
+      height: 100%;
+      background: var(--brass);
+      border-radius: 3px;
+    }
+
+    .ledger-amt {
+      flex: 0 0 auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.92rem;
+      color: var(--text-onpaper-muted);
+      min-width: 66px;
+      text-align: right;
+    }
+
+    @keyframes rowIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ledger-row {
+        animation: none;
+        opacity: 1;
+      }
+    }
+
+    /* ---------- feature ledger-lines ---------- */
+    .features {
+      padding: 12px 0 72px;
+      border-top: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    .features-label {
+      padding-top: 44px;
+      font-size: 0.9rem;
+      color: var(--text-onink-muted);
+      margin-bottom: 8px;
+    }
+
+    .feature-row {
+      display: grid;
+      grid-template-columns: 260px 1fr 110px;
+      gap: 28px;
+      align-items: baseline;
+      padding: 26px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    .feature-row:last-child {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    .feature-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.25rem;
+      font-weight: 500;
+    }
+
+    .feature-desc {
+      color: var(--text-onink-muted);
+      font-size: 0.98rem;
+      max-width: 52ch;
+    }
+
+    .feature-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--brass-bright);
+      text-align: right;
+    }
+
+    /* ---------- insight callout ---------- */
+    .insight {
+      padding: 8px 0 80px;
+    }
+
+    .insight-card {
+      background: var(--ink-soft);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-left: 3px solid var(--brass);
+      border-radius: 3px;
+      padding: 32px 36px;
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .insight-label {
+      font-size: 0.88rem;
+      color: var(--text-onink-muted);
+    }
+
+    .insight-label strong {
+      display: block;
+      font-family: 'Fraunces', serif;
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: var(--text-onink);
+      margin-top: 6px;
+    }
+
+    .insight-quote {
+      font-size: 1.08rem;
+      line-height: 1.55;
+      color: var(--text-onink);
+    }
+
+    .insight-quote .num {
+      color: var(--brass-bright);
+    }
+
+    /* ---------- footer ---------- */
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.09);
+      padding: 28px 0 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-onink-muted);
+      font-size: 0.88rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* ---------- responsive ---------- */
+    @media (max-width: 860px) {
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding-top: 30px;
+      }
+
+      .ledger-card {
+        transform: none;
+      }
+
+      .feature-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .feature-tag {
+        text-align: left;
+      }
+
+      .insight-card {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="wrap header-row">
+      <div class="brand">Ledger<span>.</span></div>
+      <a class="header-cta" href="auth.html">Sign in</a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap wr1 hero">
+      <div>
+        <h1>Know where<br>every rupee went.</h1>
+        <p class="lede">Ledger tracks what you spend, sorts it by category, and tells you the one thing worth paying
+          attention to each month — no spreadsheet, no guesswork.</p>
+        <div class="hero-ctas">
+          <a class="btn-primary cta" href="auth.html">Start tracking</a>
+          <a class="btn-secondary cta" href="#how-it-works">See how it works</a>
+        </div>
+      </div>
+
+      <div class="ledger-card" aria-hidden="true">
+        <div class="ledger-head">
+          <span class="ledger-month">October</span>
+          <span class="ledger-total num">₹18,240</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-cat">Food</span>
+          <span class="ledger-bar-track"><span class="ledger-bar-fill" style="width:70%;"></span></span>
+          <span class="ledger-amt">₹4,120</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-cat">Travel</span>
+          <span class="ledger-bar-track"><span class="ledger-bar-fill" style="width:42%;"></span></span>
+          <span class="ledger-amt">₹2,300</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-cat">Subscriptions</span>
+          <span class="ledger-bar-track"><span class="ledger-bar-fill" style="width:20%;"></span></span>
+          <span class="ledger-amt">₹1,050</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-cat">Everything else</span>
+          <span class="ledger-bar-track"><span class="ledger-bar-fill" style="width:55%;"></span></span>
+          <span class="ledger-amt">₹10,770</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="how-it-works">
+    <div class="wrap">
+      <p class="features-label">What it actually does</p>
+
+      <div class="feature-row">
+        <div class="feature-title">Every rupee, logged</div>
+        <div class="feature-desc">Add a transaction in seconds and it's saved, categorized, and ready to review —
+          nothing to export, nothing to reconcile by hand.</div>
+        <div class="feature-tag">instant</div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-title">See the pattern, not just the total</div>
+        <div class="feature-desc">A running breakdown by category shows where money actually goes each month, not just
+          how much is left in the account.</div>
+        <div class="feature-tag">by category</div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-title">One honest insight a month</div>
+        <div class="feature-desc">Ledger reads your month's spending and tells you, in plain language, the one thing
+          worth paying attention to — not a wall of charts.</div>
+        <div class="feature-tag">monthly</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="insight">
+    <div class="wrap">
+      <div class="insight-card">
+        <div class="insight-label">This month's insight<strong>Straight to the point</strong></div>
+        <div class="insight-quote">"You spent <span class="num">18%</span> more on food delivery than your <span
+            class="num">3</span>-month average — mostly on weeknights. Everything else held steady."</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap header-row">
+      <span>Ledger — a personal finance dashboard</span>
+      <span>Built by [your name]</span>
+    </div>
+  </footer>
+
+</body>
+
+</html>
